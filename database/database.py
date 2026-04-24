@@ -1,41 +1,33 @@
-from core.models import Expense, Category
+from core.models import Expense
 from django.db.models import Sum
 from django.utils import timezone
+from decimal import Decimal
 
 def get_dashboard_data(user):
-    """Safely fetches transactions and totals for the dashboard."""
+    """Calculates all stats for index.html without errors."""
     now = timezone.now()
     
+    # Safety check: if user isn't logged in, return zeros
     if not user.is_authenticated:
-        return {'total_spent': 0, 'transactions': []}
+        return {
+            'total_spent': Decimal('0.00'),
+            'transactions': [],
+            'remaining_budget': Decimal('0.00'),
+            'savings_goal_pct': 0
+        }
 
-    # Fetch all expenses for this specific user
+    # Fetch transactions (Fixes line 211 error)
     transactions = Expense.objects.filter(user=user).order_by('-date')
     
-    # Calculate total spent this month
-    total_spent = transactions.filter(
+    # Calculate Total Spent for the current month
+    total = transactions.filter(
         date__month=now.month, 
         date__year=now.year
-    ).aggregate(Sum('amount'))['amount__sum'] or 0
+    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
 
     return {
-        'total_spent': total_spent,
-        'transactions': transactions[:5], # Shows last 5
+        'total_spent': total,
+        'transactions': transactions[:10],  # Show latest 10
+        'remaining_budget': Decimal('5000.00') - total, # Example static budget
+        'savings_goal_pct': 15 # Example static goal
     }
-
-def init_default_categories():
-    """Seeds the database with common categories."""
-    categories = ['Food', 'Transport', 'Rent', 'Education', 'Entertainment']
-    for cat_name in categories:
-        Category.objects.get_or_create(name=cat_name)
-
-
-
-
-
-
-
-
-
-
-
