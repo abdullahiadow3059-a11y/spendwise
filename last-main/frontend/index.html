@@ -1,322 +1,320 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpendSmart Pro | Student Finance Command Center</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SpendSmart – Student Expense Tracker</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── CSS Variables ── */
+    :root {
+      --green-50:  #EAF3DE;
+      --green-100: #C0DD97;
+      --green-400: #639922;
+      --green-600: #3B6D11;
+      --green-800: #27500A;
+      --teal-400:  #1D9E75;
+      --blue-400:  #378ADD;
+      --blue-600:  #185FA5;
+      --amber-400: #BA7517;
+      --red-400:   #E24B4A;
+      --red-600:   #A32D2D;
+      --pink-400:  #D4537E;
+      --purple-400:#7F77DD;
+      --gray-100:  #D3D1C7;
+      --gray-400:  #888780;
+      --gray-800:  #444441;
+      --border:    rgba(0,0,0,0.12);
+      --surface:   #ffffff;
+      --surface2:  #f0f2ec;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 210px;
+      min-height: 100vh;
+      background: #ffffff;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+    }
+
+    .sidebar-logo {
+      padding: 22px 18px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--green-800);
+      letter-spacing: -0.3px;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    nav { padding: 10px 8px; flex: 1; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--gray-800);
+      margin-bottom: 2px;
+      transition: background 0.15s, color 0.15s;
+      user-select: none;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: var(--green-50); color: var(--green-800); }
+    .nav-item.active {
+      background: var(--green-50);
+      color: var(--green-800);
+      font-weight: 600;
+    }
+    .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+    .sidebar-user {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .user-badge { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--green-100);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; color: var(--green-800);
+    }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-role { font-size: 11px; color: var(--gray-400); }
+
+    /* ── Main Layout ── */
+    .main {
+      margin-left: 210px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-title { font-size: 16px; font-weight: 600; }
+    .topbar-sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+    .content { flex: 1; padding: 24px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Cards & Grid ── */
+    .card { background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 20px; }
+    .card-title { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
     
-    <style>
-        :root {
-            --primary: #10b981;
-            --primary-dark: #059669;
-            --secondary: #6366f1;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --radius: 16px;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .stat-card { background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+    .stat-label { font-size: 11px; color: var(--gray-400); text-transform: uppercase; margin-bottom: 8px; }
+    .stat-value { font-size: 24px; font-weight: 600; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
-        /* --- Sidebar Navigation --- */
-        .sidebar { width: 280px; background: var(--card); height: 100vh; border-right: 1px solid #e2e8f0; position: fixed; display: flex; flex-direction: column; z-index: 100; transition: all 0.3s ease; }
-        .logo-area { padding: 32px; font-size: 1.5rem; font-weight: 800; color: var(--primary-dark); display: flex; align-items: center; gap: 12px; }
-        
-        .nav-menu { padding: 0 16px; flex: 1; }
-        .nav-group-label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 20px 16px 10px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--radius); cursor: pointer; color: var(--text-muted); transition: all 0.2s; font-weight: 600; margin-bottom: 4px; text-decoration: none; }
-        .nav-item:hover { background: #f1f5f9; color: var(--text-main); }
-        .nav-item.active { background: #ecfdf5; color: var(--primary-dark); }
-        .nav-icon { font-size: 1.2rem; }
+    /* ── Form Elements ── */
+    .form-section { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12px; color: var(--gray-400); margin-bottom: 5px; }
+    .form-input, .form-select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 13px; }
+    .btn { padding: 10px 20px; border-radius: var(--radius-md); border: none; cursor: pointer; font-size: 13px; font-weight: 600; text-align: center; text-decoration: none; }
+    .btn-primary { background: var(--green-400); color: white; }
 
-        /* --- Main Layout --- */
-        .main-wrapper { margin-left: 280px; flex: 1; width: calc(100% - 280px); }
-        .top-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 90; }
-        .content-area { padding: 40px; max-width: 1400px; margin: 0 auto; }
+    /* ── Transactions ── */
+    .expense-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .cat-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-        /* --- Page Headers --- */
-        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; }
-        .welcome-text h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
-        .welcome-text p { color: var(--text-muted); margin-top: 4px; }
-
-        /* --- Global Components --- */
-        .card { background: var(--card); border-radius: var(--radius); padding: 24px; border: 1px solid #e2e8f0; box-shadow: var(--shadow); height: 100%; transition: transform 0.2s ease; }
-        .card:hover { transform: translateY(-2px); }
-        .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
-
-        /* --- Stats Grid --- */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 32px; }
-        .stat-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; }
-        .stat-value { font-size: 1.75rem; font-weight: 800; display: block; }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
-        .badge-success { background: #dcfce7; color: #166534; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-
-        /* --- Dashboard Specifics --- */
-        .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-        
-        /* Transaction Table Style */
-        .t-row { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #f1f5f9; transition: background 0.2s; border-radius: 12px; }
-        .t-row:hover { background: #f8fafc; }
-        .t-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .t-info { flex: 1; margin-left: 16px; }
-        .t-name { font-weight: 700; font-size: 0.95rem; }
-        .t-meta { font-size: 0.8rem; color: var(--text-muted); }
-        .t-amt { font-weight: 800; font-size: 1rem; }
-
-        /* Progress Bars */
-        .prog-container { height: 10px; background: #f1f5f9; border-radius: 20px; margin: 12px 0; overflow: hidden; }
-        .prog-bar { height: 100%; border-radius: 20px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* --- Forms --- */
-        .form-control { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-family: inherit; font-size: 1rem; margin-top: 8px; }
-        .form-control:focus { outline: none; border-color: var(--primary); ring: 3px solid rgba(16, 185, 129, 0.1); }
-        .btn-submit { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; font-size: 1rem; }
-        .btn-submit:hover { background: var(--primary-dark); }
-
-        /* --- Animations --- */
-        .page { display: none; animation: slideUp 0.4s ease-out forwards; }
-        .page.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        @media (max-width: 1024px) {
-            .sidebar { width: 80px; }
-            .nav-text, .logo-area span, .nav-group-label { display: none; }
-            .main-wrapper { margin-left: 80px; width: calc(100% - 80px); }
-            .grid-2-1 { grid-template-columns: 1fr; }
-        }
-    </style>
+    @media (max-width: 850px) { .stats-grid { grid-template-columns: 1fr 1fr; } .two-col { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <div class="logo-area">
-            <span class="nav-icon">💎</span> <span>SpendSmart</span>
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-title">💰 SpendSmart</div>
+      <div class="logo-sub">Student Expense Tracker</div>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="navigate('dashboard', this)"><span>📊</span> Dashboard</div>
+      <div class="nav-item" onclick="navigate('add', this)"><span>➕</span> Add Expense</div>
+      <div class="nav-item" onclick="navigate('budget', this)"><span>📋</span> Budget</div>
+      <div class="nav-item" onclick="navigate('savings', this)"><span>🎯</span> Savings Goals</div>
+      <div class="nav-item" onclick="navigate('reports', this)"><span>📈</span> Reports</div>
+      <div class="nav-item" onclick="navigate('profile', this)"><span>👤</span> Profile</div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-badge">
+        <div class="user-avatar">{{ user.username|slice:":2"|upper }}</div>
+        <div>
+          <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+          <div class="user-role">Student User</div>
         </div>
-        <nav class="nav-menu">
-            <p class="nav-group-label">Overview</p>
-            <a href="#" class="nav-item active" onclick="navigate('dashboard', this)">
-                <span class="nav-icon">📊</span> <span class="nav-text">Insights</span>
-            </a>
-            <a href="#" class="nav-item" onclick="navigate('add', this)">
-                <span class="nav-icon">➕</span> <span class="nav-text">New Expense</span>
-            </a>
+      </div>
+    </div>
+  </aside>
 
-            <p class="nav-group-label">Planning</p>
-            <a href="#" class="nav-item" onclick="navigate('budget', this)">
-                <span class="nav-icon">📅</span> <span class="nav-text">Budgets</span>
-            </a>
-            <a href="#" class="nav-item" onclick="navigate('savings', this)">
-                <span class="nav-icon">🎯</span> <span class="nav-text">Goals</span>
-            </a>
-
-            <p class="nav-group-label">Data</p>
-            <a href="#" class="nav-item" onclick="navigate('reports', this)">
-                <span class="nav-icon">📈</span> <span class="nav-text">Full Reports</span>
-            </a>
-        </nav>
-        <div style="padding: 20px; border-top: 1px solid #f1f5f9;">
-            <div class="nav-item" style="color: var(--danger);">
-                <span class="nav-icon">🚪</span> <span class="nav-text">Sign Out</span>
-            </div>
-        </div>
-    </aside>
-
-    <div class="main-wrapper">
-        <header class="top-nav">
-            <div class="search-bar" style="color: var(--text-muted); font-weight: 500;">
-                Welcome back, <strong>{{ user.name|default:"Light" }}</strong> 👋
-            </div>
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <div style="position: relative;">🔔 <span style="position: absolute; top:-5px; right:-5px; background: var(--danger); width:8px; height:8px; border-radius:50%;"></span></div>
-                <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800;">
-                    {{ user.initials|default:"LA" }}
-                </div>
-            </div>
-        </header>
-
-        <div class="content-area">
-
-            <div id="page-dashboard" class="page active">
-                <div class="header-flex">
-                    <div class="welcome-text">
-                        <h1>Financial Overview</h1>
-                        <p>Track your student lifestyle and savings</p>
-                    </div>
-                    <button class="btn-submit" style="width: auto; padding: 10px 20px; margin-top: 0; font-size: 0.85rem;" onclick="navigate('add', this)">+ Log Expense</button>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="card">
-                        <p class="stat-label">Total Spent (April)</p>
-                        <span class="stat-value">KSh {{ total_spent|default:"0"|floatformat:2 }}</span>
-                        <div style="margin-top: 12px;"><span class="badge badge-danger">↑ 12%</span> <span style="font-size: 0.75rem; color: var(--text-muted);">vs last month</span></div>
-                    </div>
-                    <div class="card">
-                        <p class="stat-label">Remaining Budget</p>
-                        <span class="stat-value">KSh {{ remaining_budget|default:"15,400"|floatformat:2 }}</span>
-                        <div class="prog-container"><div class="prog-bar" style="width: {{ budget_usage_pct|default:65 }}%; background: var(--primary);"></div></div>
-                    </div>
-                    <div class="card">
-                        <p class="stat-label">Health Score</p>
-                        <span class="stat-value">84/100</span>
-                        <div style="margin-top: 12px;"><span class="badge badge-success">Good</span> <span style="font-size: 0.75rem; color: var(--text-muted);">Stable habits</span></div>
-                    </div>
-                </div>
-
-                <div class="grid-2-1">
-                    <div class="card">
-                        <div class="card-title">Recent Activity <span>View All</span></div>
-                        <div class="transaction-list">
-                            {% for item in transactions %}
-                            <div class="t-row">
-                                <div class="t-icon" style="background: #f1f5f9;">{% if item.category == 'Food' %}🍕{% elif item.category == 'Transport' %}🚌{% else %}💸{% endif %}</div>
-                                <div class="t-info">
-                                    <div class="t-name">{{ item.name }}</div>
-                                    <div class="t-meta">{{ item.date|date:"D, d M" }} • {{ item.category }}</div>
-                                </div>
-                                <div class="t-amt" style="color: var(--danger);">-KSh {{ item.amount }}</div>
-                            </div>
-                            {% empty %}
-                            <div style="text-align: center; padding: 40px; color: var(--text-muted);">No recent logs. Click 'New Expense' to start.</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">Weekly Trends</div>
-                        <canvas id="mainChart" height="280"></canvas>
-                        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
-                            <p class="stat-label">Most Spent On</p>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-weight: 700;">Education & Fees</span>
-                                <span style="color: var(--secondary); font-weight: 800;">42%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-add" class="page">
-                <div style="max-width: 600px; margin: 0 auto;">
-                    <div class="header-flex">
-                        <div class="welcome-text">
-                            <h1>New Transaction</h1>
-                            <p>Enter the details of your spending</p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <form method="POST">
-                            {% csrf_token %}
-                            <div style="margin-bottom: 20px;">
-                                <label style="font-weight: 700;">Description</label>
-                                <input type="text" name="description" placeholder="e.g. Lunch at Cafeteria" class="form-control" required>
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                                <div>
-                                    <label style="font-weight: 700;">Amount (KSh)</label>
-                                    <input type="number" name="amount" placeholder="0.00" class="form-control" required>
-                                </div>
-                                <div>
-                                    <label style="font-weight: 700;">Category</label>
-                                    <select name="category" class="form-control">
-                                        <option>Food & Drinks</option>
-                                        <option>Transport</option>
-                                        <option>Education</option>
-                                        <option>Leisure</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label style="font-weight: 700;">Date</label>
-                                <input type="date" name="date" class="form-control" id="todayDate">
-                            </div>
-                            <button type="submit" class="btn-submit">Securely Save Transaction</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-savings" class="page">
-                <div class="header-flex">
-                    <div class="welcome-text">
-                        <h1>Savings Goals</h1>
-                        <p>Save money for what matters</p>
-                    </div>
-                </div>
-                <div class="stats-grid">
-                    {% for goal in savings_goals %}
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div style="background: #e0e7ff; padding: 10px; border-radius: 12px; font-size: 1.5rem;">{{ goal.icon|default:"🎯" }}</div>
-                            <span class="badge badge-success">{{ goal.percent }}%</span>
-                        </div>
-                        <h3 style="margin: 15px 0 5px;">{{ goal.name }}</h3>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Target: KSh {{ goal.target }}</p>
-                        <div class="prog-container"><div class="prog-bar" style="width: {{ goal.percent }}%; background: var(--secondary);"></div></div>
-                        <p style="font-size: 0.85rem; font-weight: 700; margin-top: 10px;">KSh {{ goal.current }} saved</p>
-                    </div>
-                    {% endfor %}
-                    <div class="card" style="border: 2px dashed #e2e8f0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
-                        <span style="font-size: 2rem; color: var(--text-muted);">+</span>
-                        <p style="font-weight: 700; color: var(--text-muted);">Add New Goal</p>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="page-title">Dashboard</div>
+        <div class="topbar-sub" id="page-sub">{% now "F Y" %} overview</div>
+      </div>
     </div>
 
-    <script>
-        // Set Default Date to Today
-        document.getElementById('todayDate').valueAsDate = new Date();
+    <div class="content">
+      
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Spent</div>
+            <div class="stat-value">KSh {{ total_spent|default:"0" }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Remaining</div>
+            <div class="stat-value">KSh {{ remaining_budget|default:"0" }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Transactions</div>
+            <div class="stat-value">{{ transactions|length }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Goal Save</div>
+            <div class="stat-value">{{ savings_goal_pct|default:"0" }}%</div>
+          </div>
+        </div>
 
-        // Page Navigation System
-        function navigate(pageId, element) {
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            // Remove active class from nav
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            // Show selected page
-            document.getElementById('page-' + pageId).classList.add('active');
-            if(element) element.classList.add('active');
-        }
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Recent Transactions</div>
+            {% for expense in transactions %}
+            <div class="expense-item">
+              <div class="cat-dot" style="background:var(--teal-400)"></div>
+              <div style="flex:1">
+                <div class="expense-name">{{ expense.description }}</div>
+                <div class="expense-date">{{ expense.date|date:"M d, Y" }}</div>
+              </div>
+              <div class="expense-amount" style="color:var(--red-400)">-KSh {{ expense.amount }}</div>
+            </div>
+            {% empty %}
+            <p style="font-size: 12px; color: var(--gray-400)">No data available.</p>
+            {% endfor %}
+          </div>
 
-        // Initialize Charts
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Spending',
-                    data: [1200, 1900, 800, 2500, 1400, 3200, 900],
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, border: { display: false } },
-                    y: { ticks: { display: false }, grid: { display: false }, border: { display: false } }
-                }
-            }
-        });
-    </script>
+          <div class="card">
+            <div class="card-title">Budget Categories</div>
+            {% for cat in category_data %}
+            <div style="margin-bottom: 12px;">
+              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                <span>{{ cat.name }}</span><span>{{ cat.percentage }}%</span>
+              </div>
+              <div style="height:6px; background:var(--surface2); border-radius:3px;">
+                <div style="width:{{ cat.percentage }}%; height:100%; background:var(--green-400); border-radius:3px;"></div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-add">
+        <div class="card" style="max-width: 500px;">
+          <div class="card-title">New Expense</div>
+          <form method="POST" action="{% url 'add_expense' %}">
+            {% csrf_token %}
+            <div class="form-section">
+              <label class="form-label">Description</label>
+              <input name="description" class="form-input" type="text" required placeholder="e.g. Lunch">
+            </div>
+            <div class="form-row" style="display:flex; gap:10px;">
+              <div class="form-section" style="flex:1">
+                <label class="form-label">Amount</label>
+                <input name="amount" class="form-input" type="number" required>
+              </div>
+              <div class="form-section" style="flex:1">
+                <label class="form-label">Date</label>
+                <input name="date" class="form-input" type="date" value="{% now 'Y-m-d' %}">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">Save Expense</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="page" id="page-profile">
+        <div class="card" style="max-width: 500px;">
+          <div class="card-title">System Architecture</div>
+          <div style="font-size:12px; background:var(--surface2); padding:15px; border-radius:8px; line-height:1.8;">
+            <b>Backend:</b> Django 6.0 (Python)<br>
+            <b>Database:</b> SQLite3<br>
+            <b>Frontend:</b> HTML5/CSS3/Vanilla JS<br>
+            <b>Status:</b> Production Ready
+          </div>
+          
+          <form action="{% url 'logout' %}" method="post" style="margin-top:20px;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="width:100%; color:var(--red-600); border: 1px solid var(--red-400);">
+              🔓 Logout Account
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* Professional Page Switching */
+    const pageMeta = {
+      dashboard: { title: 'Dashboard', sub: '{% now "F Y" %} overview' },
+      add:       { title: 'Add Expense', sub: 'Record a transaction' },
+      budget:    { title: 'Budget', sub: 'Spending limits' },
+      savings:   { title: 'Savings', sub: 'Goal tracking' },
+      reports:   { title: 'Reports', sub: 'Data analysis' },
+      profile:   { title: 'Profile', sub: 'Account settings' },
+    };
+
+    function navigate(id, el) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + id).classList.add('active');
+      if (el) el.classList.add('active');
+      const meta = pageMeta[id] || {title: id, sub: ''};
+      document.getElementById('page-title').textContent = meta.title;
+      document.getElementById('page-sub').textContent = meta.sub;
+    }
+  </script>
 </body>
 </html>
