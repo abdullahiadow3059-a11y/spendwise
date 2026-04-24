@@ -1,55 +1,41 @@
-from django.db import models
-from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator
-from decimal import Decimal
+from core.models import Expense, Category
+from django.db.models import Sum
+from django.utils import timezone
 
-class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, null=True)
+def get_dashboard_data(user):
+    """Safely fetches transactions and totals for the dashboard."""
+    now = timezone.now()
+    
+    if not user.is_authenticated:
+        return {'total_spent': 0, 'transactions': []}
 
-    class Meta:
-        verbose_name_plural = "Categories"
+    # Fetch all expenses for this specific user
+    transactions = Expense.objects.filter(user=user).order_by('-date')
+    
+    # Calculate total spent this month
+    total_spent = transactions.filter(
+        date__month=now.month, 
+        date__year=now.year
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
 
-    def __str__(self):
-        return self.name
+    return {
+        'total_spent': total_spent,
+        'transactions': transactions[:5], # Shows last 5
+    }
 
-class Expense(models.Model):
-    user = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
-        related_name='expenses', 
-        null=True, 
-        blank=True
-    )
-    category = models.ForeignKey(Category, on_delete=models.PROTECT)
-    amount = models.DecimalField(
-        max_digits=12, 
-        decimal_places=2, 
-        validators=[MinValueValidator(Decimal('0.01'))]
-    )
-    description = models.CharField(max_length=255, blank=True)
-    date = models.DateField(auto_now_add=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+def init_default_categories():
+    """Seeds the database with common categories."""
+    categories = ['Food', 'Transport', 'Rent', 'Education', 'Entertainment']
+    for cat_name in categories:
+        Category.objects.get_or_create(name=cat_name)
 
-    class Meta:
-        ordering = ['-date']
-        db_table = 'core_expense'
 
-    def __str__(self):
-        return f"{self.category.name} - {self.amount}"
 
-class Budget(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    monthly_limit = models.DecimalField(max_digits=12, decimal_places=2)
-    month_year = models.DateField()
 
-    class Meta:
-        unique_together = ('user', 'category', 'month_year')
 
-class SavingsGoal(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    goal_name = models.CharField(max_length=200)
-    target_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    current_savings = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    status = models.CharField(max_length=20, default='active')
+
+
+
+
+
+
