@@ -1,153 +1,89 @@
 """
-Smart Student Expense Tracker - Professional Database Module
-Group 9 | Optimized Version
+Smart Student Expense Tracker - Database & Logic Module
+Group 9 | Optimized for Production (Render)
 """
 
-import sqlite3
-import hashlib
-from datetime import datetime
-from contextlib import contextmanager
-
-DB_NAME = "expense_tracker.db"
-
-# ──────────────────────────────────────────────
-# UTILITIES & CONNECTION
-# ──────────────────────────────────────────────
-
-@contextmanager
-def get_db():
-    """
-    Safe connection manager. 
-    Ensures the database closes even if the code crashes.
-    """
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    try:
-        yield conn
-    finally:
-        conn.close()
-
-def hash_password(password):
-    """Securely hashes passwords so they aren't stored in plain text."""
-    return hashlib.sha256(password.encode()).hexdigest()
+from core.models import Expense, Category, Budget, SavingsGoal
+from django.contrib.auth.models import User
+from django.db.models import Sum, F
+from django.utils import timezone
+from decimal import Decimal
 
 # ──────────────────────────────────────────────
-# SCHEMA CREATION (OPTIMIZED)
-# ──────────────────────────────────────────────
-
-def create_tables():
-    """Creates tables with performance indexes and strict constraints."""
-    with get_db() as conn:
-        cursor = conn.cursor()
-        
-        # We use executescript for the initial build for speed
-        cursor.executescript("""
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                full_name TEXT NOT NULL,
-                username TEXT NOT NULL UNIQUE,
-                password TEXT NOT NULL,
-                email TEXT,
-                created_at TEXT DEFAULT (datetime('now'))
-            );
-
-            CREATE TABLE IF NOT EXISTS categories (
-                category_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                description TEXT
-            );
-
-            CREATE TABLE IF NOT EXISTS expenses (
-                expense_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                category_id INTEGER NOT NULL,
-                amount REAL NOT NULL CHECK(amount > 0),
-                description TEXT,
-                date TEXT DEFAULT (date('now')),
-                created_at TEXT DEFAULT (datetime('now')),
-                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-                FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE RESTRICT
-            );
-
-            -- INDEXES: This makes the app stay fast as data grows
-            CREATE INDEX IF NOT EXISTS idx_expenses_user ON expenses(user_id);
-            CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
-
-            CREATE TABLE IF NOT EXISTS budgets (
-                budget_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                category_id INTEGER NOT NULL,
-                monthly_limit REAL NOT NULL CHECK(monthly_limit > 0),
-                month TEXT NOT NULL,
-                UNIQUE(user_id, category_id, month),
-                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-                FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE
-            );
-
-            CREATE TABLE IF NOT EXISTS savings_goals (
-                goal_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                goal_name TEXT NOT NULL,
-                target_amount REAL NOT NULL CHECK(target_amount > 0),
-                saved_amount REAL DEFAULT 0.0,
-                deadline TEXT,
-                status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'cancelled')),
-                created_at TEXT DEFAULT (datetime('now')),
-                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-            );
-        """)
-        conn.commit()
-    print("[DB] Tables and Indexes initialized.")
-
-# ──────────────────────────────────────────────
-# CORE OPERATIONS (SAMPLES)
+# 1. USER OPERATIONS (Replaces your old SQL registration)
 # ──────────────────────────────────────────────
 
 def register_user(full_name, username, password, email=None):
-    """Registers a user with a hashed password."""
-    hashed = hash_password(password)
-    with get_db() as conn:
-        try:
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO users (full_name, username, password, email) VALUES (?, ?, ?, ?)",
-                (full_name, username, hashed, email)
-            )
-            conn.commit()
-            return cursor.lastrowid
-        except sqlite3.IntegrityError:
-            return None
-
-def login_user(username, password):
-    """Validates login against hashed passwords."""
-    hashed = hash_password(password)
-    with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, hashed))
-        user = cursor.fetchone()
-        return dict(user) if user else None
-
-def add_expense(user_id, category_id, amount, description="", date=None):
-    """Records an expense with automatic date handling."""
-    date = date or datetime.today().strftime("%Y-%m-%d")
-    with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO expenses (user_id, category_id, amount, description, date) VALUES (?, ?, ?, ?, ?)",
-            (user_id, category_id, amount, description, date)
-        )
-        conn.commit()
-        return cursor.lastrowid
+    """Creates a user with secure PBKDF2 hashing (replaces your plain-text SQL)."""
+    if User.objects.filter(username=username).exists():
+        return None
+    user = User.objects.create_user(username=username, password=password, email=email)
+    user.first_name = full_name
+    user.save()
+    return user
 
 # ──────────────────────────────────────────────
-# INITIALIZATION
+# 2. EXPENSE & SUMMARY LOGIC (Replaces your JOIN queries)
 # ──────────────────────────────────────────────
 
-def init_db():
-    create_tables()
-    # Note: seed_default_categories remains the same as your original
-    print("[DB] Database Ready.")
+def get_monthly_summary(user):
+    """
+    Returns total spent per category for the current month.
+    Equivalent to your old 'get_monthly_summary' SQL.
+    """
+    now = timezone.now()
+    return (
+        Expense.objects.filter(user=user, date__month=now.month, date__year=now.year)
+        .values('category__name')
+        .annotate(total_spent=Sum('amount'))
+        .order_by('-total_spent')
+    )
 
-if __name__ == "__main__":
-    init_db()
+def get_total_spent(user):
+    """Returns the grand total spent this month."""
+    now = timezone.now()
+    total = Expense.objects.filter(
+        user=user, date__month=now.month, date__year=now.year
+    ).aggregate(Sum('amount'))['amount__sum']
+    return total or Decimal('0.00')
+
+# ──────────────────────────────────────────────
+# 3. BUDGET VS SPENDING (Replaces your complex SQL COALESCE)
+# ──────────────────────────────────────────────
+
+def get_budget_performance(user):
+    """
+    Compares monthly limits to actual spending.
+    Matches your 'get_budget_vs_spending' logic.
+    """
+    now = timezone.now()
+    budgets = Budget.objects.filter(user=user, month_year__month=now.month)
+    
+    results = []
+    for b in budgets:
+        spent = Expense.objects.filter(
+            user=user, category=b.category, date__month=now.month
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        results.append({
+            'category': b.category.name,
+            'limit': b.monthly_limit,
+            'spent': spent,
+            'remaining': b.monthly_limit - spent,
+            'percent': (spent / b.monthly_limit) * 100 if b.monthly_limit > 0 else 0
+        })
+    return results
+
+# ──────────────────────────────────────────────
+# 4. INITIALIZATION (Replaces your 'seed_default_categories')
+# ──────────────────────────────────────────────
+
+def init_default_categories():
+    """Seeds the database with your group's specific categories."""
+    defaults = [
+        "Food & Drinks", "Transport", "Accommodation", 
+        "Education", "Entertainment", "Healthcare", 
+        "Clothing", "Airtime & Data", "Personal Care"
+    ]
+    for name in defaults:
+        Category.objects.get_or_create(name=name)
