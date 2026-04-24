@@ -14,6 +14,7 @@ class Category(models.Model):
         return self.name
 
 class Expense(models.Model):
+    # null=True fixes the 'non-nullable' build error
     user = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
