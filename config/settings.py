@@ -3,7 +3,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-key-for-student-spendwise'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-for-now')
 DEBUG = True
 ALLOWED_HOSTS = ['spendwise-18.onrender.com', 'localhost', '127.0.0.1']
 
