@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | SpendSmart</title>
+    <style>
+        :root {
+            --green-50: #f3f8ee;
+            --green-600: #3b6d11;
+            --green-800: #22420a;
+            --surface: #ffffff;
+            --radius: 12px;
+        }
+        body {
+            background: var(--green-50);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-card {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px rgba(59, 109, 17, 0.1);
+            width: 100%;
+            max-width: 350px;
+        }
+        h2 { color: var(--green-800); text-align: center; margin-bottom: 25px; }
+        form p { margin-bottom: 15px; color: #444; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button {
+            background: var(--green-600);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background: var(--green-800); }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>SpendSmart Login</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Access Dashboard</button>
+        </form>
+    </div>
+</body>
+</html>
